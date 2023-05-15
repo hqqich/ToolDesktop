@@ -59,7 +59,7 @@ kotlin {
                 implementation("com.github.ltttttttttttt:load-the-image:1.0.5")//this
 //
 //
-//                implementation("uk.co.caprica:vlcj:4.7.1")
+                implementation("uk.co.caprica:vlcj:4.7.1")
 
 
 
