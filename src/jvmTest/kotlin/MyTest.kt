@@ -16,8 +16,17 @@ import androidx.compose.ui.window.application
 import com.lt.load_the_image.LoadTheImageManager
 import com.lt.load_the_image.rememberImagePainter
 import java.sql.*
-
-
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.runtime.*
 // 测试图片
 @Composable
 @Preview
@@ -110,9 +119,59 @@ fun main() = application {
 
 //        println(LibVlc.libvlc_get_version())
 
-        App()
+//        App()
+
+        TodoList()
     }
 }
+
+
+data class TodoItem(val id: Int, val text: String)
+
+@Composable
+fun TodoList() {
+    val todoItems = remember { mutableStateListOf(
+        TodoItem(1, "Buy milk"),
+        TodoItem(2, "Do laundry"),
+        TodoItem(3, "Call mom"),
+    )}
+
+    LazyColumn {
+        items(todoItems) { todoItem ->
+            TodoItemRow(todoItem) { id ->
+                todoItems.removeIf { it.id == id }
+            }
+        }
+    }
+}
+
+@Composable
+fun TodoItemRow(todoItem: TodoItem, onDelete: (Int) -> Unit) {
+    var offsetX by remember { mutableStateOf(0f) }
+    val screenWidth = 50
+    val onGesture = Modifier.pointerInput(Unit) {
+        detectHorizontalDragGestures { change, a ->
+            offsetX += change.position.x
+        }
+    }
+
+    Row(
+        Modifier
+            .offset { IntOffset(offsetX.roundToInt(), 0) }
+            .fillMaxWidth()
+            .then(onGesture)
+    ) {
+        Text(todoItem.text, Modifier.padding(16.dp))
+
+        if (offsetX.absoluteValue > screenWidth / 2) {
+            IconButton(onClick = { onDelete(todoItem.id) }) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
+            }
+        }
+    }
+}
+
+
 
 fun aa() {
     LoadTheImageManager.defaultErrorImagePath = "drawable-xxhdpi/load_error.jpeg"//this

@@ -4,6 +4,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -18,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.google.gson.JsonArray
@@ -29,6 +32,7 @@ import server.HttpDataServer
 import com.lt.load_the_image.rememberImagePainter
 import page.VideoPlayer
 import page.rememberVideoPlayerState
+import kotlin.math.roundToInt
 
 //class MyDataSource(
 //    private val repo: MyRepository
@@ -231,27 +235,48 @@ fun ItemMessage(data: JsonElement) {
 
         }
     ) {
-        Row(
-            modifier = Modifier
-                .scrollable(
-                    state = scrollState,
-                    orientation = Orientation.Horizontal,
-                )
-                .horizontalScroll(scrollState),
-            verticalAlignment = Alignment.CenterVertically
+
+
+        Box(
+            Modifier
+                .fillMaxWidth()
         ) {
-            Spacer(Modifier.width(10.dp))
-            Image(
-                painter = rememberImagePainter(data.asJsonObject.get("userPic").asString),
-                contentDescription = "",
-                modifier = Modifier.width(60.dp).height(60.dp).clip(shape = CircleShape)
-                    .background(Color.Black)
-            )
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = "作者：${data.asJsonObject.get("userName").asString}"
+            var offsetX by remember { mutableStateOf(0f) }
+
+            // 监听手势事件，更新 offsetX 的值
+            val onGesture = Modifier.pointerInput(Unit) {
+                detectHorizontalDragGestures { change, dragAmount ->
+                    offsetX += dragAmount
+                }
+            }
+
+            // 创建可左右滑动的子项
+            Row(
+                modifier = Modifier
+                    .scrollable(
+                        state = scrollState,
+                        orientation = Orientation.Horizontal,
+                    )
+                    .horizontalScroll(scrollState)
+                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+                    .background(Color.White)
+                    .fillMaxSize()
+                    .then(onGesture),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(Modifier.width(10.dp))
+                Image(
+                    painter = rememberImagePainter(data.asJsonObject.get("userPic").asString),
+                    contentDescription = "",
+                    modifier = Modifier.width(60.dp).height(60.dp).clip(shape = CircleShape)
+                        .background(Color.Black)
                 )
-                Text(text = "${data.asJsonObject.get("title").asString}")
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        text = "作者：${data.asJsonObject.get("userName").asString}"
+                    )
+                    Text(text = "${data.asJsonObject.get("title").asString}")
+                }
             }
         }
 
